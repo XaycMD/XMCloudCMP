@@ -29,6 +29,10 @@ if ($InitEnv) {
     }
     # We actually want the folder that it's in for mounting
     $LicenseXmlPath = (Get-Item $LicenseXmlPath).Directory.FullName
+    # Copy .env as template to .env.user
+    if (-not (Test-Path $UserEnvPath)) {
+        Copy-Item -Path ".env" -Destination $UserEnvPath
+    }
 }
 
 Write-Host "Preparing your Sitecore Containers environment!" -ForegroundColor Green
