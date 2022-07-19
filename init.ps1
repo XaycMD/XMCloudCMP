@@ -18,6 +18,7 @@ Param (
 )
 
 $ErrorActionPreference = "Stop";
+$UserEnvPath = ".\.env.user"
 
 if ($InitEnv) {
     if (-not $LicenseXmlPath.EndsWith("license.xml")) {
@@ -114,20 +115,20 @@ $scjssconfig = @{
 
 ConvertTo-Json -InputObject $scjssconfig | Out-File -FilePath "src\rendering\scjssconfig.json"
 
-Set-EnvFileVariable "JSS_DEPLOYMENT_SECRET_xmcloudpreview" -Value $xmCloudBuild.renderingHosts.xmcloudpreview.jssDeploymentSecret
+Set-EnvFileVariable "JSS_DEPLOYMENT_SECRET_xmcloudpreview" -Value $xmCloudBuild.renderingHosts.xmcloudpreview.jssDeploymentSecret -Path $UserEnvPath
 
 ################################
 # Generate Sitecore Api Key
 ################################
 
 $sitecoreApiKey = (New-Guid).Guid
-Set-EnvFileVariable "SITECORE_API_KEY_xmcloudpreview" -Value $sitecoreApiKey
+Set-EnvFileVariable "SITECORE_API_KEY_xmcloudpreview" -Value $sitecoreApiKey -Path $UserEnvPath
 
 ################################
 # Generate JSS_EDITING_SECRET
 ################################
 $jssEditingSecret = Get-SitecoreRandomString 64 -DisallowSpecial
-Set-EnvFileVariable "JSS_EDITING_SECRET" -Value $jssEditingSecret
+Set-EnvFileVariable "JSS_EDITING_SECRET" -Value $jssEditingSecret -Path $UserEnvPath
 
 ###############################
 # Populate the environment file
@@ -135,38 +136,43 @@ Set-EnvFileVariable "JSS_EDITING_SECRET" -Value $jssEditingSecret
 
 if ($InitEnv) {
 
-    Write-Host "Populating required .env file values..." -ForegroundColor Green
+    if(-not (Test-Path $UserEnvPath -PathType Leaf)) {
+        Write-Host "No User Env file found, making copy based off example." -ForegroundColor Yellow
+        Copy-Item ".\.env" -Destination $UserEnvPath
+    }
+
+    Write-Host "Populating required .env.user file values..." -ForegroundColor Green
 
     # HOST_LICENSE_FOLDER
-    Set-EnvFileVariable "HOST_LICENSE_FOLDER" -Value $LicenseXmlPath
+    Set-EnvFileVariable "HOST_LICENSE_FOLDER" -Value $LicenseXmlPath -Path $UserEnvPath
 
     # CM_HOST
-    Set-EnvFileVariable "CM_HOST" -Value "xmcloudcm.localhost"
+    Set-EnvFileVariable "CM_HOST" -Value "xmcloudcm.localhost" -Path $UserEnvPath
 
     # RENDERING_HOST
-    Set-EnvFileVariable "RENDERING_HOST" -Value "www.xmcloudpreview.localhost"
+    Set-EnvFileVariable "RENDERING_HOST" -Value "www.xmcloudpreview.localhost" -Path $UserEnvPath
 
     # REPORTING_API_KEY = random 64-128 chars
-    Set-EnvFileVariable "REPORTING_API_KEY" -Value (Get-SitecoreRandomString 128 -DisallowSpecial)
+    Set-EnvFileVariable "REPORTING_API_KEY" -Value (Get-SitecoreRandomString 128 -DisallowSpecial) -Path $UserEnvPath
 
     # TELERIK_ENCRYPTION_KEY = random 64-128 chars
-    Set-EnvFileVariable "TELERIK_ENCRYPTION_KEY" -Value (Get-SitecoreRandomString 128)
+    Set-EnvFileVariable "TELERIK_ENCRYPTION_KEY" -Value (Get-SitecoreRandomString 128) -Path $UserEnvPath
 
     # MEDIA_REQUEST_PROTECTION_SHARED_SECRET
-    Set-EnvFileVariable "MEDIA_REQUEST_PROTECTION_SHARED_SECRET" -Value (Get-SitecoreRandomString 64)
+    Set-EnvFileVariable "MEDIA_REQUEST_PROTECTION_SHARED_SECRET" -Value (Get-SitecoreRandomString 64) -Path $UserEnvPath
 
     # SQL_SA_PASSWORD
     # Need to ensure it meets SQL complexity requirements
-    Set-EnvFileVariable "SQL_SA_PASSWORD" -Value (Get-SitecoreRandomString 19 -DisallowSpecial -EnforceComplexity)
+    Set-EnvFileVariable "SQL_SA_PASSWORD" -Value (Get-SitecoreRandomString 19 -DisallowSpecial -EnforceComplexity) -Path $UserEnvPath
 
     # SQL_SERVER
-    Set-EnvFileVariable "SQL_SERVER" -Value "mssql"
+    Set-EnvFileVariable "SQL_SERVER" -Value "mssql" -Path $UserEnvPath
 
     # SQL_SA_LOGIN
-    Set-EnvFileVariable "SQL_SA_LOGIN" -Value "sa"
+    Set-EnvFileVariable "SQL_SA_LOGIN" -Value "sa" -Path $UserEnvPath
 
     # SITECORE_ADMIN_PASSWORD
-    Set-EnvFileVariable "SITECORE_ADMIN_PASSWORD" -Value $AdminPassword
+    Set-EnvFileVariable "SITECORE_ADMIN_PASSWORD" -Value $AdminPassword -Path $UserEnvPath
 }
 
 Write-Host "Done!" -ForegroundColor Green

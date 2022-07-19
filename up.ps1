@@ -1,6 +1,14 @@
+[CmdletBinding(DefaultParameterSetName = "no-arguments")]
+Param (
+    [Parameter(HelpMessage = "Toggles whether to skip building the images for faster dockerfile adjustments when the images are no altered.",
+        ParameterSetName = "skip-build")]
+    [switch]$SkipBuild
+)
+
 $ErrorActionPreference = "Stop";
 
-$envContent = Get-Content .env -Encoding UTF8
+$envPath = ".env.user"
+$envContent = Get-Content $envPath -Encoding UTF8
 $xmCloudHost = $envContent | Where-Object { $_ -imatch "^CM_HOST=.+" }
 $sitecoreDockerRegistry = $envContent | Where-Object { $_ -imatch "^SITECORE_DOCKER_REGISTRY=.+" }
 $sitecoreVersion = $envContent | Where-Object { $_ -imatch "^SITECORE_VERSION=.+" }
@@ -24,7 +32,7 @@ if ($ClientCredentialsLogin -eq "true") {
 
 #set nuget version
 $xmCloudBuild = Get-Content "xmcloud.build.json" | ConvertFrom-Json
-Set-EnvFileVariable "NODEJS_VERSION" -Value $xmCloudBuild.renderingHosts.xmcloudpreview.nodeVersion
+Set-EnvFileVariable "NODEJS_VERSION" -Value $xmCloudBuild.renderingHosts.xmcloudpreview.nodeVersion -Path $envPath
 
 # Double check whether init has been run
 $envCheckVariable = "HOST_LICENSE_FOLDER"
@@ -36,16 +44,18 @@ if (-not $envCheck) {
 Write-Host "Keeping XM Cloud base image up to date" -ForegroundColor Green
 docker pull "$($sitecoreDockerRegistry)sitecore-xmcloud-cm:$($sitecoreVersion)"
 
-# Build all containers in the Sitecore instance, forcing a pull of latest base containers
-Write-Host "Building containers..." -ForegroundColor Green
-docker-compose build
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Container build failed, see errors above."
+if(-not $SkipBuild) {
+    # Build all containers in the Sitecore instance, forcing a pull of latest base containers
+    Write-Host "Building containers..." -ForegroundColor Green
+    docker-compose --env-file $envPath build
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Container build failed, see errors above."
+    }
 }
 
 # Start the Sitecore instance
 Write-Host "Starting Sitecore environment..." -ForegroundColor Green
-docker-compose up -d
+docker-compose --env-file $envPath up -d
 
 # Wait for Traefik to expose CM route
 Write-Host "Waiting for CM to become available..." -ForegroundColor Green
