@@ -80,7 +80,6 @@ services:
         PARENT_IMAGE: ${SITECORE_DOCKER_REGISTRY}sitecore-xmcloud-cm:${SITECORE_VERSION}
         SOLUTION_IMAGE: ${REGISTRY}${COMPOSE_PROJECT_NAME}-solution:${VERSION:-latest}
         TOOLS_IMAGE: ${TOOLS_IMAGE}
-        SCCH_IMAGE: ${SCCH_IMAGE}
     depends_on:
       - solution
     volumes:
