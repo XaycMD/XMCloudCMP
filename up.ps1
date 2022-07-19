@@ -1,8 +1,20 @@
 [CmdletBinding(DefaultParameterSetName = "no-arguments")]
 Param (
-    [Parameter(HelpMessage = "Toggles whether to skip building the images for faster dockerfile adjustments when the images are no altered.",
+    [Parameter(HelpMessage = "Toggles whether to skip building the images.",
         ParameterSetName = "skip-build")]
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+
+    [Parameter(HelpMessage = "Toggles whether to skip schemas and rebuild of the indexes.",
+        ParameterSetName = "skip-indexing")]
+    [switch]$SkipIndexing,
+
+    [Parameter(HelpMessage = "Toggles whether to skip pushing items and JSS configuration.",
+        ParameterSetName = "skip-push")]
+    [switch]$SkipPush,
+
+    [Parameter(HelpMessage = "Toggles whether to skip opening the site and CM in a browser.",
+        ParameterSetName = "skip-open")]
+    [switch]$SkipOpen
 )
 
 $ErrorActionPreference = "Stop";
@@ -97,65 +109,69 @@ if ($LASTEXITCODE -ne 0) {
     Write-Error "Unable to log into Sitecore, did the Sitecore environment start correctly? See logs above."
 }
 
-# Populate Solr managed schemas to avoid errors during item deploy
-Write-Host "Populating Solr managed schema..." -ForegroundColor Green
-dotnet sitecore index schema-populate
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "Populating Solr managed schema failed, see errors above."
+if(-not $SkipIndexing) {
+    # Populate Solr managed schemas to avoid errors during item deploy
+    Write-Host "Populating Solr managed schema..." -ForegroundColor Green
+    dotnet sitecore index schema-populate
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Populating Solr managed schema failed, see errors above."
+    }
+
+    # Rebuild indexes
+    Write-Host "Rebuilding indexes ..." -ForegroundColor Green
+    dotnet sitecore index rebuild
 }
 
-# Rebuild indexes
-Write-Host "Rebuilding indexes ..." -ForegroundColor Green
-dotnet sitecore index rebuild
+if(-not $SkipPush) {
+    ##
+    ## This script will sync the JSS sample site on first run, and then serialize it.
+    ## Subsequent executions will only push the serialized site. You may wish to remove /
+    ## simplify this logic if using this starter for your own development.
+    ##
 
-##
-## This script will sync the JSS sample site on first run, and then serialize it.
-## Subsequent executions will only push the serialized site. You may wish to remove /
-## simplify this logic if using this starter for your own development.
-##
+    # JSS sample has already been deployed and serialized, push the serialized items
+    if (Test-Path .\src\items\content) {
 
-# JSS sample has already been deployed and serialized, push the serialized items
-if (Test-Path .\src\items\content) {
+        Write-Host "Pushing items to Sitecore..." -ForegroundColor Green
+        dotnet sitecore ser push # --publish
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Serialization push failed, see errors above."
+        }
 
-    Write-Host "Pushing items to Sitecore..." -ForegroundColor Green
-    dotnet sitecore ser push # --publish
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Serialization push failed, see errors above."
+    # JSS sample has not been deployed yet. Use its deployment process to initialize.
+    } else {
+
+        # Some items are needed for JSS to be able to deploy.
+        Write-Host "Pushing init items to Sitecore..." -ForegroundColor Green
+        dotnet sitecore ser push --include InitItems
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Serialization push failed, see errors above."
+        }
+
+        Write-Host "Deploying JSS application..." -ForegroundColor Green
+        Push-Location src\rendering
+        try {
+            jss deploy items -c -d
+        } finally {
+            Pop-Location
+        }
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "JSS deploy failed, see errors above."
+        }
+        dotnet sitecore publish
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "Item publish failed, see errors above."
+        }
+
+        Write-Host "Pulling JSS deployed items..." -ForegroundColor Green
+        dotnet sitecore ser pull
     }
 
-# JSS sample has not been deployed yet. Use its deployment process to initialize.
-} else {
-
-    # Some items are needed for JSS to be able to deploy.
-    Write-Host "Pushing init items to Sitecore..." -ForegroundColor Green
-    dotnet sitecore ser push --include InitItems
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Serialization push failed, see errors above."
-    }
-
-    Write-Host "Deploying JSS application..." -ForegroundColor Green
-    Push-Location src\rendering
-    try {
-        jss deploy items -c -d
-    } finally {
-        Pop-Location
-    }
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "JSS deploy failed, see errors above."
-    }
-    dotnet sitecore publish
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Item publish failed, see errors above."
-    }
-
-    Write-Host "Pulling JSS deployed items..." -ForegroundColor Green
-    dotnet sitecore ser pull
+    Write-Host "Pushing sitecore API key" -ForegroundColor Green
+    & docker\build\cm\templates\import-templates.ps1 -RenderingSiteName "xmcloudpreview" -SitecoreApiKey $sitecoreApiKey
 }
 
-Write-Host "Pushing sitecore API key" -ForegroundColor Green
-& docker\build\cm\templates\import-templates.ps1 -RenderingSiteName "xmcloudpreview" -SitecoreApiKey $sitecoreApiKey
-
-if ($ClientCredentialsLogin -ne "true") {
+if ((-not $SkipOpen) -and ($ClientCredentialsLogin -ne "true")) {
     Write-Host "Opening site..." -ForegroundColor Green
     
     Start-Process https://xmcloudcm.localhost/sitecore/

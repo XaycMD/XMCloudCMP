@@ -80,6 +80,7 @@ services:
         PARENT_IMAGE: ${SITECORE_DOCKER_REGISTRY}sitecore-xmcloud-cm:${SITECORE_VERSION}
         SOLUTION_IMAGE: ${REGISTRY}${COMPOSE_PROJECT_NAME}-solution:${VERSION:-latest}
         TOOLS_IMAGE: ${TOOLS_IMAGE}
+        SCCH_IMAGE: ${SCCH_IMAGE}
     depends_on:
       - solution
     volumes:
@@ -97,4 +98,14 @@ services:
       ## Development Environment Optimizations
       SITECORE_DEVELOPMENT_PATCHES: DevEnvOn,CustomErrorsOff,DebugOn,DiagnosticsOff,InitMessagesOff
       Sitecore_AppSettings_exmEnabled:define: "no" # remove to turn on EXM
+      ## SCCH
+      Sitecore_ConnectionStrings_CMP.ContentHub: ClientId=${SCCH_Client_Id};ClientSecret=${SCCH_Client_Secret};UserName=${SCCH_User};Password=${SCCH_Password};URI=${SCCH_URI};
+      Sitecore_ConnectionStrings_CMP.ServiceBusEntityPathIn: ${SCCH_IN}
+      Sitecore_ConnectionStrings_CMP.ServiceBusSubscription: ${SCCH_Subscription}
+      Sitecore_ConnectionStrings_CMP.ServiceBusEntityPathOut: ${SCCH_OUT}
+      Sitecore_ConnectionStrings_DAM.ContentHub: ClientId=${SCCH_Client_Id};ClientSecret=${SCCH_Client_Secret};UserName=${SCCH_User};Password=${SCCH_Password};URI=${SCCH_URI};
+      Sitecore_ConnectionStrings_DAM.SearchPage: ${SCCH_Search_Page_URI}
+      Sitecore_ConnectionStrings_DAM.ExternalRedirectKey: ${SCCH_External_Redirect_Key}
     entrypoint: powershell -Command "& C:/tools/entrypoints/iis/Development.ps1"
+    ports:
+      - "8000:80"
