@@ -108,7 +108,7 @@
     <Content Include="sitecore modules\items\master\items.master.chub.dat" />
     <Content Include="sitecore modules\items\web\items.web.chub.dat" />
     <Content Include="sitecore\shell\client\Applications\MApp\1stleveldependencylicenses.json" />
-    <None Include="web.config" />
+    <Content Include="web.config" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
