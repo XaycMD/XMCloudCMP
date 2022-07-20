@@ -1,19 +1,15 @@
 [CmdletBinding(DefaultParameterSetName = "no-arguments")]
 Param (
-    [Parameter(HelpMessage = "Toggles whether to skip building the images.",
-        ParameterSetName = "skip-build")]
+    [Parameter(HelpMessage = "Toggles whether to skip building the images.")]
     [switch]$SkipBuild,
 
-    [Parameter(HelpMessage = "Toggles whether to skip schemas and rebuild of the indexes.",
-        ParameterSetName = "skip-indexing")]
+    [Parameter(HelpMessage = "Toggles whether to skip schemas and rebuild of the indexes.")]
     [switch]$SkipIndexing,
 
-    [Parameter(HelpMessage = "Toggles whether to skip pushing items and JSS configuration.",
-        ParameterSetName = "skip-push")]
+    [Parameter(HelpMessage = "Toggles whether to skip pushing items and JSS configuration.")]
     [switch]$SkipPush,
 
-    [Parameter(HelpMessage = "Toggles whether to skip opening the site and CM in a browser.",
-        ParameterSetName = "skip-open")]
+    [Parameter(HelpMessage = "Toggles whether to skip opening the site and CM in a browser.")]
     [switch]$SkipOpen
 )
 
