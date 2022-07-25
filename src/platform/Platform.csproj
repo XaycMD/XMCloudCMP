@@ -64,6 +64,7 @@
     <PackageReference Include="Sitecore.XmCloud.Assemblies" />
     <PackageReference Include="Sitecore.Assemblies.SitecoreHeadlessServicesServer" />
     <PackageReference Include="Sitecore.Connector.CMP" />
+    <PackageReference Include="Sitecore.Connector.CMP.TaxonomyProvider" />
     <PackageReference Include="Sitecore.Connector.ContentHub.DAM" />
     <PackageReference Include="Stylelabs.M.Sdk.WebClient" />
   </ItemGroup>
