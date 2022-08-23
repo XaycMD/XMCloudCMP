@@ -49,7 +49,7 @@ Variables should be in the following format:
 ]
 ```
 Values for Sitecore_ConnectionStrings_CMP_dot_ContentHub and Sitecore_ConnectionStrings_DAM_dot_ContentHub can be set up with [these](https://doc.sitecore.com/xp/en/developers/connect-for-ch/50/connect-for-content-hub/add-connection-strings-for-cmp-to-your-sitecore-instance.html) instructions.
-Values for Sitecore_ConnectionStrings_CMP_dot_ServiceBusEntityPathIn and Sitecore_ConnectionStrings_CMP_dot_ServiceBusEntityPathOut can be set up with [these](https://doc.sitecore.com/xp/en/developers/connect-for-ch/50/connect-for-content-hub/add-connection-strings-for-cmp-to-your-sitecore-instance.html) instructions.
+Values for Sitecore_ConnectionStrings_CMP_dot_ServiceBusEntityPathIn and Sitecore_ConnectionStrings_CMP_dot_ServiceBusEntityPathOut can be set up with [these](https://doc.sitecore.com/xp/en/developers/connect-for-ch/50/connect-for-content-hub/create-a-sitecore-content-hub-action.html) instructions.
 
 ## Configure CORS for Content Hub
 
